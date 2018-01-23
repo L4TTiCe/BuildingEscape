@@ -20,20 +20,18 @@ UOpenDoor::UOpenDoor()
 
 
 void UOpenDoor::OpenDoor() {
-	auto *Owner = GetOwner();
+	Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
+}
 
-	// Create Rotator
-	auto NewRotation = FRotator(0.0f, 90.0f, 0.0f);
-
-	// Set new rotation
-	Owner->SetActorRotation(NewRotation);
+void UOpenDoor::CloseDoor() {
+	Owner->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
 }
 
 // Called when the game starts
 void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
-
+	Owner = GetOwner();
 	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
@@ -43,10 +41,16 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Poll Trigger Volume to see if ActorThatOpens is overlapping with the Trigger Volume
 	if(PressurePlate->IsOverlappingActor(ActorThatOpens)){
 		OpenDoor();
+		DoorLastOpenTime = GetWorld()->GetTimeSeconds();
 	}
 
+	// Close Door after Delay
+	if((GetWorld()->GetTimeSeconds() - DoorLastOpenTime) > DoorCloseDelay) {
+		CloseDoor();
+	}
 	// ...
 }
 
